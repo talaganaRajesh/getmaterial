@@ -1,33 +1,31 @@
 const express = require('express');
 const multer = require('multer');
+const { google } = require('googleapis');
+const admin = require('firebase-admin');
 const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const port = 5000;
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./firebase-admin-sdk.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+// Initialize Google Drive API
+const drive = google.drive({
+  version: 'v3',
+  auth: new google.auth.GoogleAuth({
+    keyFile: 'google-drive-credentials.json',
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  }),
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const upload = multer({ storage });
-
-// Create uploads directory if it doesn't exist
-const fs = require('fs');
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
 
 // Upload endpoint
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -38,6 +36,15 @@ app.post('/upload', upload.single('file'), (req, res) => {
   res.status(200).json({ message: 'File uploaded successfully', file: req.file });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// Notes endpoint
+app.get('/notes', (req, res) => {
+  // Example response, replace with your actual logic
+  const notes = [
+    { id: 1, title: 'Math Notes', semester: 'Fall 2021', subject: 'Math', fileUrl: 'http://example.com/note1.pdf' },
+    { id: 2, title: 'Science Notes', semester: 'Spring 2021', subject: 'Science', fileUrl: 'http://example.com/note2.pdf' },
+  ];
+  res.status(200).json(notes);
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

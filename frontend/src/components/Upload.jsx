@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { getAuth } from 'firebase/auth';
 
 function Upload() {
   const [file, setFile] = useState(null);
@@ -10,7 +10,6 @@ function Upload() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const auth = getAuth();
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -28,7 +27,7 @@ function Upload() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
-    
+
     if (!user) {
       setError('You must be authenticated to upload files.');
       alert('You must be authenticated to upload files. Redirecting to login page...');
@@ -43,7 +42,7 @@ function Upload() {
 
     setUploading(true);
     setError(null);
-    
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
@@ -52,7 +51,7 @@ function Upload() {
 
     try {
       const idToken = await user.getIdToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {  // Added /upload endpoint
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {  // Use import.meta.env
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${idToken}`
@@ -66,12 +65,10 @@ function Upload() {
         throw new Error(data.message || 'Upload failed');
       }
 
-      alert('File uploaded successfully to Google Drive!');
-      console.log('Drive View Link:', data.fileData?.driveViewLink);
-      navigate('/dashboard');
+      console.log('Upload successful:', data);
     } catch (error) {
       console.error('Error details:', error);
-      setError(error.message || 'Error uploading file. Please try again.');
+      setError(error.message);
     } finally {
       setUploading(false);
     }
