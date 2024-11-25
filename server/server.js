@@ -1,50 +1,55 @@
 const express = require('express');
-const multer = require('multer');
 const { google } = require('googleapis');
-const admin = require('firebase-admin');
 const cors = require('cors');
-const path = require('path');
+require('dotenv').config();  // Load environment variables
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
-
-// Initialize Firebase Admin SDK
-const serviceAccount = require('./firebase-admin-sdk.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 // Initialize Google Drive API
-const drive = google.drive({
-  version: 'v3',
-  auth: new google.auth.GoogleAuth({
-    keyFile: 'google-drive-credentials.json',
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  }),
+const auth = new google.auth.GoogleAuth({
+  keyFile: 'google-drive-credentials.json',
+  scopes: ['https://www.googleapis.com/auth/drive.readonly'],
 });
+
+const drive = google.drive({ version: 'v3', auth });
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Upload endpoint
-app.post('/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
+// Notes endpoint: Retrieve files from a specific Google Drive folder
+app.get('/notes', async (req, res) => {
+  try {
+    // Get the folder ID from environment variables
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+    // Extract only the folder ID from the URL if it's a full URL
+    const match = folderId.match(/folders\/([a-zA-Z0-9_-]+)/);
+    const cleanFolderId = match ? match[1] : folderId;
+
+    const response = await drive.files.list({
+      q: `'${cleanFolderId}' in parents and mimeType!='application/vnd.google-apps.folder'`,
+      fields: 'files(id, name, webViewLink)',
+    });
+
+    const files = response.data.files;
+    if (files.length === 0) {
+      return res.status(404).json({ message: 'No files found in the folder' });
+    }
+
+    const formattedFiles = files.map((file) => ({
+      id: file.id,
+      name: file.name,
+      fileUrl: file.webViewLink,  // Direct link to view in Google Drive
+    }));
+
+    res.status(200).json(formattedFiles);
+  } catch (error) {
+    console.error('Error retrieving files:', error);
+    res.status(500).json({ message: 'Error retrieving files', error: error.message });
   }
-
-  res.status(200).json({ message: 'File uploaded successfully', file: req.file });
 });
 
-// Notes endpoint
-app.get('/notes', (req, res) => {
-  // Example response, replace with your actual logic
-  const notes = [
-    { id: 1, title: 'Math Notes', semester: 'Fall 2021', subject: 'Math', fileUrl: 'http://example.com/note1.pdf' },
-    { id: 2, title: 'Science Notes', semester: 'Spring 2021', subject: 'Science', fileUrl: 'http://example.com/note2.pdf' },
-  ];
-  res.status(200).json(notes);
-});
-
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

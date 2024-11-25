@@ -3,8 +3,6 @@ import axios from 'axios';
 
 function Dashboard() {
   const [notes, setNotes] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,26 +14,21 @@ function Dashboard() {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/notes');
-      console.log('Response data:', response.data); // Debugging line to inspect response
-      if (Array.isArray(response.data)) {
-        setNotes(response.data);
-        setError(null);
-      } else {
-        throw new Error('API returned a welcome message instead of notes.');
-      }
+      setNotes(response.data);
+      setError(null);
     } catch (error) {
       console.error('Error fetching notes:', error);
-      setError(error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       {loading && <p>Loading...</p>}
-      {error && <p>Error fetching notes: {error.message}</p>}
+      {error && <p className="text-red-500">Error fetching notes: {error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {notes.map((note) => (
           <div key={note.id} className="bg-white p-4 rounded shadow">
@@ -44,7 +37,6 @@ function Dashboard() {
             <p className="text-gray-600 mb-2">Subject: {note.subject}</p>
             <a
               href={note.fileUrl}
-              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline"
             >

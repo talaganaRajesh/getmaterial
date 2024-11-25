@@ -39,4 +39,3 @@ function Navbar({ user }) {
 }
 
 export default Navbar;
-
