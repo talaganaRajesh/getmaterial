@@ -26,7 +26,7 @@ app.use(cors());
 app.use(express.json());
 
 // Upload endpoint
-app.post('/', upload.single('file'), async (req, res) => {
+app.post('/upload', upload.single('file'), async (req, res) => {
   console.log('Upload request received');
 
   console.log('Request body:', req.body);
@@ -86,7 +86,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`File upload server running on port ${PORT}`);
 });
