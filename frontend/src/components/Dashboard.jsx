@@ -162,7 +162,7 @@ function Dashboard() {
                 {note.contributorName || "unknown"}
 
                 {/* Tooltip */}
-                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 py-3 px-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   View all notes by {note.contributorName}
                 </span>
               </span>

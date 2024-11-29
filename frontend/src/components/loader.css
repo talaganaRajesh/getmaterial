@@ -74,6 +74,9 @@
   .tooltip {
     visibility: hidden;
     opacity: 0;
+    width: 200px; /* Fixed width for tooltip */
+    text-align: center; /* Center the text inside the tooltip */
+    border-radius: 14px;
     transition: opacity 0.3s ease;
   }
   
