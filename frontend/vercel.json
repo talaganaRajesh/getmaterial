@@ -2,10 +2,10 @@
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
     "framework": "vite",
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
-        }
-    ]
+    
+        "routes": [
+          { "src": "/assets/(.*)", "headers": { "Cache-Control": "max-age=31536000, immutable" }, "dest": "/assets/$1" },
+          { "src": "/(.*)", "headers": { "Cache-Control": "no-cache" }, "dest": "/index.html" }
+        ]
+      
 }

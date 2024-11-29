@@ -8,12 +8,6 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ],
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
