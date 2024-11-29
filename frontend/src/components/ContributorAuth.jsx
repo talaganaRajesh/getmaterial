@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 function ContributorAuth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
@@ -35,12 +35,19 @@ function ContributorAuth() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Contributor Authentication</h1>
-      <div className="max-w-md mx-auto">
+      <h1 className="text-3xl font-bold mb-16 text-center">Contributor Authentication</h1>
+      <div className="max-w-md mx-auto bg-cyan-50 p-8 rounded-xl">
         <button
           onClick={handleGoogleSignIn}
-          className="w-full bg-red-500 text-white p-2 rounded mb-4 hover:bg-red-600"
+          className="w-full bg-gradient-to-r flex flex-row justify-center gap-2 items-center from-red-950 to-black font-bold py-4 text-white p-2 rounded mb-4 hover:bg-gradient-to-l transition-colors duration-300"
         >
+
+          <lord-icon
+            src="https://cdn.lordicon.com/eziplgef.json"
+            trigger="hover"
+          >
+          </lord-icon>
+
           Sign in with Google
         </button>
         <form onSubmit={handleEmailAuth} className="space-y-4">
@@ -49,7 +56,7 @@ function ContributorAuth() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border-2 rounded-lg"
             required
           />
           <input
@@ -57,19 +64,19 @@ function ContributorAuth() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border-2 rounded-lg"
             required
           />
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            className="w-full bg-gradient-to-r from-cyan-400 to-green-500 text-black font-bold p-2 rounded hover:bg-blue-600"
           >
             {isSignUp ? 'Sign Up' : 'Sign In'}
           </button>
         </form>
         <button
           onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full mt-4 text-blue-500 hover:underline"
+          className="w-full mt-4 text-black hover:underline"
         >
           {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
         </button>
