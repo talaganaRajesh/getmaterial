@@ -86,7 +86,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`File upload server running on port ${PORT}`);
 });
