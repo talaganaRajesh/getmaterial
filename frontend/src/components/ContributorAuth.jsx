@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/GM logo 2.png';
 
 function ContributorAuth() {
   const [email, setEmail] = useState('');
@@ -35,7 +36,10 @@ function ContributorAuth() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-16 text-center">Contributor Authentication</h1>
+      <div className='flex justify-center items-center'>
+        <img src={logo} alt="logo" className='size-20' />
+        <h1 className="text-3xl font-bold">Account</h1>
+      </div>
       <div className="max-w-md mx-auto bg-cyan-50 p-8 rounded-xl">
         <button
           onClick={handleGoogleSignIn}
