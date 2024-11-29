@@ -15,6 +15,7 @@ function Dashboard() {
   const [titleFilter, setTitleFilter] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState(''); // Add nameFilter state
 
   // Unique semesters and subjects for dropdowns
   const [uniqueSemesters, setUniqueSemesters] = useState([]);
@@ -26,14 +27,14 @@ function Dashboard() {
         setLoading(true);
         const fetchedNotes = await getNotes();
         setNotes(fetchedNotes);
-        
+
         // Extract unique semesters and subjects
         const semesters = [...new Set(fetchedNotes.map(note => note.semester))];
         const subjects = [...new Set(fetchedNotes.map(note => note.subject))];
-        
+
         setUniqueSemesters(semesters);
         setUniqueSubjects(subjects);
-        
+
         setError(null);
       } catch (error) {
         console.error('Error fetching notes:', error);
@@ -49,26 +50,28 @@ function Dashboard() {
   // Filter effect
   useEffect(() => {
     // Apply filters
-    const filtered = notes.filter(note => 
+    const filtered = notes.filter(note =>
       note.name.toLowerCase().includes(titleFilter.toLowerCase()) &&
       (semesterFilter === '' || note.semester === semesterFilter) &&
-      (subjectFilter === '' || note.subject === subjectFilter)
+      (subjectFilter === '' || note.subject === subjectFilter) &&
+      (nameFilter === '' || note.contributorName === nameFilter) // Filter by contributor name
     );
 
     setFilteredNotes(filtered);
-  }, [notes, titleFilter, semesterFilter, subjectFilter]);
+  }, [notes, titleFilter, semesterFilter, subjectFilter, nameFilter]); // Include nameFilter
 
   // Reset filters
   const resetFilters = () => {
     setTitleFilter('');
     setSemesterFilter('');
     setSubjectFilter('');
+    setNameFilter(''); // Reset nameFilter as well
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-center">All Notes</h1>
-      
+
       {/* Filter Panel */}
       <div className="mb-6 bg-gray-100 p-4 rounded-2xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -77,8 +80,8 @@ function Dashboard() {
             <label htmlFor="titleFilter" className="block text-sm font-medium text-gray-700">
               Title
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="titleFilter"
               value={titleFilter}
               onChange={(e) => setTitleFilter(e.target.value)}
@@ -92,7 +95,7 @@ function Dashboard() {
             <label htmlFor="semesterFilter" className="block text-sm font-medium text-gray-700">
               Semester
             </label>
-            <select 
+            <select
               id="semesterFilter"
               value={semesterFilter}
               onChange={(e) => setSemesterFilter(e.target.value)}
@@ -112,7 +115,7 @@ function Dashboard() {
             <label htmlFor="subjectFilter" className="block text-sm font-medium text-gray-700">
               Subject
             </label>
-            <select 
+            <select
               id="subjectFilter"
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
@@ -127,28 +130,46 @@ function Dashboard() {
             </select>
           </div>
 
-        {/* Reset Filters Button */}
-        <div className="mt-4 p-3 text-center">
-          <button 
-            onClick={resetFilters}
-            className="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition-colors"
-          >
-            Reset Filters
-          </button>
-        </div>
+          {/* Reset Filters Button */}
+          <div className="mt-4 p-3 text-center">
+            <button
+              onClick={resetFilters}
+              className="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
         </div>
       </div>
 
-      {loading && <div className='flex justify-center mt-32'><span class="loader"></span></div>}
+      {loading && <div className='flex justify-center mt-32'><span className="loader"></span></div>}
       {error && <p className="text-red-500">Error fetching notes: {error}</p>}
 
       {/* Notes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredNotes.map((note) => (
           <div key={note.id} className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-semibold mb-2">{note.name}</h2>
+            <h2 className="text-xl font-bold mb-2">{note.name}</h2>
             <p className="text-gray-600 mb-2">Semester: {note.semester}</p>
-            <p className="text-gray-600 mb-4">Subject: {note.subject}</p>
+            <p className="text-gray-600 mb-2">Subject: {note.subject}</p>
+
+
+            <p className='text-gray-600 mb-4'>Uploaded by:
+              <span
+                onClick={() => setNameFilter(note.contributorName)}
+                className='text-green-800 group font-semibold hover:text-green-500 transition-colors duration-300 cursor-pointer relative'
+              >
+                {note.contributorName || "unknown"}
+
+                {/* Tooltip */}
+                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  View all notes by {note.contributorName}
+                </span>
+              </span>
+            </p>
+
+
+
             <a
               href={note.fileUrl}
               rel="noopener noreferrer"

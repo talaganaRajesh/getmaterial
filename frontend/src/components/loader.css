@@ -68,3 +68,17 @@
       box-shadow: .2em -.2em 0 0 currentcolor;
     }
   }
+
+
+
+  .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .group:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+  

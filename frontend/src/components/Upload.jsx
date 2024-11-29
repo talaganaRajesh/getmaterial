@@ -15,6 +15,8 @@ function Upload() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const [contributorName, setContributorName] = useState('');
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -51,6 +53,8 @@ function Upload() {
     formData.append('title', title);
     formData.append('semester', semester);
     formData.append('subject', subject);
+    formData.append('contributorName', contributorName);
+
 
     try {
       const idToken = await user.getIdToken();
@@ -68,6 +72,7 @@ function Upload() {
         name: title,
         semester,
         subject,
+        contributorName,
         fileUrl: response.data.fileLink,
         fileId: response.data.fileId
       };
@@ -113,7 +118,7 @@ function Upload() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-2">
       <h1 className="text-3xl font-bold mb-6 text-center">Upload Note</h1>
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -168,15 +173,32 @@ function Upload() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
+            Your Name (optional)
+          </label>
+          <input
+            type="text"
+            value={contributorName}
+            onChange={(e) => setContributorName(e.target.value)}
+            placeholder="Enter your name"
+            className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500"
+          />
+        </div>
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             File
           </label>
           <input
             type="file"
             onChange={handleFileChange}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500"
+            className="w-full p-2 border-dashed border-black border rounded focus:ring-2 focus:ring-green-500"
             required
           />
         </div>
+
+        
+
 
         <button
           type="submit"
