@@ -3,6 +3,8 @@ import axios from 'axios';
 
 import { getNotes } from '../firebase';
 
+import './loader.css'
+
 function Dashboard() {
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
@@ -137,7 +139,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {loading && <p className='text-green-600 text-center font-bold'>Loading...</p>}
+      {loading && <div className='flex justify-center mt-32'><span class="loader"></span></div>}
       {error && <p className="text-red-500">Error fetching notes: {error}</p>}
 
       {/* Notes Grid */}
