@@ -26,7 +26,7 @@ app.use(cors());
 app.use(express.json());
 
 // Upload endpoint
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/', upload.single('file'), async (req, res) => {
   console.log('Upload request received');
 
   console.log('Request body:', req.body);

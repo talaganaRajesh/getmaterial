@@ -54,7 +54,7 @@ function Upload() {
 
     try {
       const idToken = await user.getIdToken();
-      const response = await axios.post('https://getmaterial-fq27.onrender.com/upload', formData, {
+      const response = await axios.post('https://getmaterial-fq27.onrender.com', formData, {
         headers: {
           'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'multipart/form-data'
