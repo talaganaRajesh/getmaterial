@@ -1,6 +1,6 @@
 import React from 'react'
 
-function footer() {
+function Footer() {
   return (
     <div className='text-center opacity-90 cursor-pointer'>
         <a href="https://github.com/talaganaRajesh" target='_blank'>
@@ -10,4 +10,4 @@ function footer() {
   )
 }
 
-export default footer
+export default Footer
