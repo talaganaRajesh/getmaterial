@@ -52,7 +52,7 @@ function Navbar({ user }) {
               </Link>
 
               {/* GitHub Button */}
-              <Button className="px-3 md:px-3">
+              <Button className="px-2 md:px-3">
                 <a
                   href="https://github.com/talaganaRajesh/getmaterial.git" // Replace with your actual repo URL
                   target="_blank"
@@ -60,7 +60,7 @@ function Navbar({ user }) {
                   className="flex group relative bg-gray-100 p-3 rounded-lg items-center gap-1 text-white"
                 >
                   <Github size={16} className="md:size-6 text-black" />
-                  <span className="tooltip absolute top-full w-1/3 transform -translate-x-1/2 mt-2 py-2 px-1 bg-gray-300 text-black text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <span className="tooltip absolute top-full w-1/3 hidden md:block transform -translate-x-1/2 mt-2 py-2 px-1 bg-gray-300 text-black text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     star on github
                   </span>
                   <span className="font-semibold text-black text-sm md:text-base">{stars}</span>
