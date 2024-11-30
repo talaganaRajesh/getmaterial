@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { Github } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Button } from '@headlessui/react';
+
+import './loader.css'
 
 function Navbar({ user }) {
   const handleSignOut = async () => {
@@ -10,6 +15,19 @@ function Navbar({ user }) {
       console.error('Error signing out:', error);
     }
   };
+
+
+
+  const [stars, setStars] = useState(0);
+
+  useEffect(() => {
+    // Replace 'username/repo' with your actual GitHub repository path
+    fetch('https://api.github.com/repos/talaganaRajesh/getmaterial')
+      .then(response => response.json())
+      .then(data => setStars(data.stargazers_count))
+      .catch(error => console.error('Error fetching GitHub stats:', error));
+  }, []);
+
 
   return (
     <nav className="bg-black">
@@ -28,13 +46,29 @@ function Navbar({ user }) {
               </button>
             </>
           ) : (
-            <>
-            <Link to="/auth" className="text-black font-bold bg-gradient-to-r from-cyan-400 to-green-500 py-3 px-4 rounded-lg hover:underline">
-              Become a Contributor
-            </Link>
-            
-            </>
-              
+            <div className='flex justify-center'>
+              <Link to="/auth" className="text-black font-bold bg-gradient-to-r from-cyan-400 to-green-500 py-3 px-4 rounded-lg hover:underline">
+                Become a Contributor
+              </Link>
+
+              {/* GitHub Button */}
+              <Button className="px-3 md:px-3">
+                <a
+                  href="https://github.com/talaganaRajesh/getmaterial.git" // Replace with your actual repo URL
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex group relative bg-gray-100 p-3 rounded-lg items-center gap-1 text-white"
+                >
+                  <Github size={16} className="md:size-6 text-black" />
+                  <span className="tooltip absolute top-full w-1/3 transform -translate-x-1/2 mt-2 py-2 px-1 bg-gray-300 text-black text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    star on github
+                  </span>
+                  <span className="font-semibold text-black text-sm md:text-base">{stars}</span>
+                </a>
+              </Button>
+
+            </div>
+
           )}
         </div>
       </div>
