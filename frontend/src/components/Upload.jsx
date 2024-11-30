@@ -24,6 +24,27 @@ function Upload() {
         setError('File size must be less than 500MB');
         return;
       }
+
+
+      // Check if the file is a video
+      if (selectedFile.type.startsWith('video/')) {
+        setError('Video files are not allowed');
+        return;
+      }
+
+      // Check if the file is an image
+      if (selectedFile.type.startsWith('image/')) {
+        setError('Image files are not allowed');
+        return;
+      }
+
+      // Check if the file is audio/music
+      if (selectedFile.type.startsWith('audio/')) {
+        setError('Audio files are not allowed');
+        return;
+      }
+
+
       setFile(selectedFile);
       setError(null);
     }
@@ -197,7 +218,7 @@ function Upload() {
           />
         </div>
 
-        
+
 
 
         <button
