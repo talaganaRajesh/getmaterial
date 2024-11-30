@@ -22,7 +22,29 @@ function ContributorAuth() {
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
+
+    if (!email.endsWith('@nist.edu')) {
+      alert('Please use your NIST email address');
+      return;
+    }
+
+
     try {
+
+
+      const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=1e54deeedf3c4d29a2c974c127b67a9f&email=${email}`);
+      const data = await response.json();
+
+      // Check if the email is valid and exists
+      if (data.deliverability !== "DELIVERABLE") {
+        alert('The provided email address does not exist or cannot receive emails.');
+
+        return;
+      }
+
+
+
+
       if (isSignUp) {
         await createUserWithEmailAndPassword(auth, email, password);
       } else {
