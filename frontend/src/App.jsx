@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import ContributorAuth from './components/ContributorAuth';
 import Upload from './components/Upload';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 import './App.css';
 
@@ -22,13 +23,14 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-green-100">
+      <div className="min-h-screen bg-gradient-to-r pb-4 from-cyan-100 to-green-100">
         <Navbar user={user} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/auth" element={<ContributorAuth />} />
           <Route path="/upload" element={<Upload user={user} />} />
         </Routes>
+        <Footer />
       </div>
     </Router>
   );
