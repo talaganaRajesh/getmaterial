@@ -38,7 +38,7 @@ function Navbar({ user }) {
         <div>
           {user ? (
             <>
-              <Link to="/upload" className="text-black md:text-base bg-white md:py-2 md:px-5 text-xs px-1 mr-2 border-white border-4 rounded-3xl md:mr-4 font-semibold hover:rounded-xl transition-all duration-300">
+              <Link to="/upload" className="text-black md:text-base bg-white md:py-2 md:px-5 text-sm px-1 mr-2 border-white border-4 rounded-3xl md:mr-4 font-semibold hover:rounded-xl transition-all duration-300">
                 Upload
               </Link>
               <button onClick={handleSignOut} className="text-white md:text-base bg-black opacity-80 text-xs font-semibold md:py-2 md:px-4 rounded-lg hover:text-red-500 transition-colors duration-300">
