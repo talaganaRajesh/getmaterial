@@ -187,7 +187,7 @@ function Dashboard() {
           </div>
         )}
       </div>
-      <div className='text-center opacity-90 cursor-pointer'>
+      <div className='text-center opacity-90 cursor-pointer pt-7'>
         <a href="https://github.com/talaganaRajesh" target='_blank'>
         made with 💖 by <span className='text-green-700 font-bold'>Rajesh</span>
         </a>
