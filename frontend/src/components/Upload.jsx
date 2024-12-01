@@ -6,6 +6,7 @@ import axios from 'axios';
 import { auth, addNote } from '../firebase';
 
 
+
 function Upload() {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
@@ -18,6 +19,22 @@ function Upload() {
   const [contributorName, setContributorName] = useState('');
 
   const [module, setModule] = useState('');
+
+
+  const messages = [
+    "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+    "Why did the computer go to the doctor? Because it had a virus!",
+    "Good things take time... just like this upload!",
+    "Remember: Patience is a virtue. Stay with us!",
+    "Why did the web developer go broke? Because he lost his cache.",
+    "This upload is a marathon, not a sprint. Hang tight!",
+    "Did you hear about the upload that walked into a bar? It still hasn't come out!",
+  ];
+
+
+  const [message, setMessage] = useState(messages[0]);
+
+
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -52,6 +69,11 @@ function Upload() {
     }
   };
 
+
+
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
@@ -72,6 +94,11 @@ function Upload() {
     setError(null);
 
     const formData = new FormData();
+
+
+
+
+
     formData.append('file', file);
     formData.append('title', title);
     formData.append('semester', semester);
@@ -80,7 +107,16 @@ function Upload() {
     formData.append('module', module);
 
 
+    // Start interval to change messages
+    const interval = setInterval(() => {
+      setMessage(messages[Math.floor(Math.random() * messages.length)]);
+    }, 4000); // Change message every 4 seconds
+
+
+
     try {
+
+
       const idToken = await user.getIdToken();
       const response = await axios.post('https://getmaterial-fq27.onrender.com', formData, {
         headers: {
@@ -106,10 +142,6 @@ function Upload() {
       await addNote(noteData);
 
 
-
-
-
-
       console.log('Upload successful:', response.data);
       alert('File uploaded successfully!');
       navigate('/');
@@ -118,11 +150,8 @@ function Upload() {
       setError(error.response?.data?.message || 'Upload failed');
     } finally {
       setUploading(false);
+      clearInterval(interval); // Clear interval after upload
     }
-
-
-
-
 
   };
 
@@ -174,9 +203,10 @@ function Upload() {
             value={module}
             onChange={(e) => setModule(e.target.value)}
             className="w-full p-2 border rounded focus:ring-1 focus:ring-green-500"
+            required
           >
             <option value="">Select Module</option>
-            {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5","assignments","questions"].map(mod => (
+            {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5", "assignments", "questions","others"].map(mod => (
               <option key={mod} value={mod}>{mod}</option>
             ))}
           </select>
@@ -236,6 +266,15 @@ function Upload() {
           {uploading ? 'Uploading...' : 'Upload Note'}
         </button>
       </form>
+
+      {uploading && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-center">
+          {message}
+        </div>
+      )}
+
+
+
     </div>
   );
 }
