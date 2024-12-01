@@ -27,6 +27,10 @@ function ContributorAuth() {
       alert('Please use your NIST email address');
       return;
     }
+    if(email==='himanshu.mishra.cse.2022@nist.edu'){
+      alert('You are not allowed to access this page');
+      return;
+    }
 
 
     try {
