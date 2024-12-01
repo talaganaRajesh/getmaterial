@@ -224,10 +224,11 @@ function Dashboard() {
           </div>
         )}
       </div>
-      <div className='text-center opacity-90 cursor-pointer pt-7'>
+      <div className='text-center opacity-90 cursor-pointer pt-7 flex flex-col'>
         <a href="https://github.com/talaganaRajesh" target='_blank'>
           made with 💖 by <span className='text-green-700 font-bold'>Rajesh</span>
         </a>
+        {!loading && <a href="https://forms.gle/pA75Prd8ku7t2n9n6" className='mt-3 text-blue-700 hover:underline' target='_blank'>Feedback</a>}
       </div>
     </div>
   );
