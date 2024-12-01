@@ -42,9 +42,9 @@ function Dashboard() {
         const subjects = [...new Set(normalizedNotes.map(note => note.subject))];
         const modules = [...new Set(normalizedNotes.map(note => note.module))];
 
-        setUniqueSemesters(semesters);
-        setUniqueSubjects(subjects);
-        setUniqueModules(modules);
+        setUniqueSemesters(semesters.sort());
+        setUniqueSubjects(subjects.sort());
+        setUniqueModules(modules.sort());
 
         setError(null);
       } catch (error) {
