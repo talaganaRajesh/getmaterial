@@ -201,7 +201,7 @@ function Upload() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Note Title
+            Note Title / teacher name
           </label>
           <input
             type="text"
