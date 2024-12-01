@@ -188,7 +188,7 @@ function Dashboard() {
             <h2 className="text-xl font-bold mb-2">{note.name}</h2>
             <p className="text-gray-600 mb-2">Semester: {note.semester}</p>
             <p className="text-gray-600 mb-2">Subject: {note.subject}</p>
-            <p className="text-gray-600 mb-2">Module: {note.module}</p>
+            <p className="text-gray-600 mb-2">@{note.module}</p>
 
 
             <p className='text-gray-600 mb-4'>Uploaded by:
