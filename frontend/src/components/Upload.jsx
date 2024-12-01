@@ -125,6 +125,7 @@ function Upload() {
     formData.append('module', module);
 
 
+    
     // Start interval to change messages
     const interval = setInterval(() => {
       setMessage(messages[Math.floor(Math.random() * messages.length)]);
