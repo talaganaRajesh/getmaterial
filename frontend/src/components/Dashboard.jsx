@@ -65,7 +65,7 @@ function Dashboard() {
       note.name.toLowerCase().includes(titleFilter.toLowerCase()) &&
       (semesterFilter === '' || note.semester === semesterFilter) &&
       (subjectFilter === '' || note.subject === subjectFilter) &&
-      (moduleFilter === '' || note.setModuleFilter === moduleFilter) && // Filter by contributor name
+      (moduleFilter === '' || note.module === moduleFilter) && // Filter by contributor name
       (nameFilter === '' || note.contributorName === nameFilter) // Filter by contributor name
     );
 
