@@ -110,7 +110,7 @@ function Upload() {
     // Start interval to change messages
     const interval = setInterval(() => {
       setMessage(messages[Math.floor(Math.random() * messages.length)]);
-    }, 4000); // Change message every 4 seconds
+    }, 5000); // Change message every 4 seconds
 
 
 
@@ -156,7 +156,7 @@ function Upload() {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-2">
+    <div className="container mx-auto px-4 pt-2 pb-5">
       <h1 className="text-3xl font-bold mb-6 text-center">Upload Note</h1>
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -164,6 +164,22 @@ function Upload() {
         </div>
       )}
       <form onSubmit={handleSubmit} className="max-w-md bg-gradient-to-r from-green-200 to-emerald-200 p-6 rounded-lg mx-auto space-y-4">
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Notes File
+          </label>
+          <input
+            type="file"
+            onChange={handleFileChange}
+            className="w-full p-2 border-dashed border-black border rounded focus:ring-2 focus:ring-green-500"
+            required
+          />
+        </div>
+
+
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Note Title
@@ -206,7 +222,7 @@ function Upload() {
             required
           >
             <option value="">Select Module</option>
-            {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5", "assignments", "questions","others"].map(mod => (
+            {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5", "assignments", "questions", "others"].map(mod => (
               <option key={mod} value={mod}>{mod}</option>
             ))}
           </select>
@@ -240,18 +256,6 @@ function Upload() {
         </div>
 
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            File
-          </label>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="w-full p-2 border-dashed border-black border rounded focus:ring-2 focus:ring-green-500"
-            required
-          />
-        </div>
-
 
 
 
@@ -268,10 +272,15 @@ function Upload() {
       </form>
 
       {uploading && (
-        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-center">
-          {message}
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm z-50">
+          <div className="p-3 bg-yellow-100 border flex-col flex border-yellow-400 text-yellow-700 rounded transition-all duration-300 text-center w-[300px] md:right-10 right-3">
+            <span className="text-green-600 text-center pb-2">uploading...</span>
+            {message}
+          </div>
         </div>
       )}
+
+
 
 
 
