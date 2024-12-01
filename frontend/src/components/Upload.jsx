@@ -22,14 +22,32 @@ function Upload() {
 
 
   const messages = [
-    "Success is not final, failure is not fatal: It is the courage to continue that counts.",
-    "Why did the computer go to the doctor? Because it had a virus!",
-    "Good things take time... just like this upload!",
-    "Remember: Patience is a virtue. Stay with us!",
-    "Why did the web developer go broke? Because he lost his cache.",
-    "This upload is a marathon, not a sprint. Hang tight!",
-    "Did you hear about the upload that walked into a bar? It still hasn't come out!",
+    "Relax, it's just pixels and patience!",
+    "This upload is faster than my coding skills!",
+    "Loading... more jokes than bytes.",
+    "Good things take time... bad uploads take longer!",
+    "Uploading... faster than a turtle race!",
+    "Patience, the file's worth it!",
+    "Bytes are working overtime. Hang in there!",
+    "Uploading... not as fast as my coffee run!",
+    "Just a moment — or maybe three coffee sips.",
+    "99% complete... like your exam prep!",
+    "Uploading... because magic is not real!",
+    "Almost there... unless 'there' moved!",
+    "This upload's slower than my Monday mornings!",
+    "Uploading... do not blink, you might miss it!",
+    "Just like fine wine, uploads take time!",
+    "Loading... faster than my internet bill!",
+    "File in progress... like my life decisions!",
+    "Uploads and chill? Stay with us!",
+    "Loading... because instant noodles spoiled us!",
+    "This upload's cooking — let it simmer!",
+    "Hold tight... we're coding in real-time!",
+    "Patience! It's on file, not on fire.",
+    "Upload speed: 1 turtle per second.",
+    "Processing... do not refresh, it panics!",
   ];
+
 
 
   const [message, setMessage] = useState(messages[0]);
@@ -110,7 +128,7 @@ function Upload() {
     // Start interval to change messages
     const interval = setInterval(() => {
       setMessage(messages[Math.floor(Math.random() * messages.length)]);
-    }, 5000); // Change message every 4 seconds
+    }, 4000); // Change message every 4 seconds
 
 
 
@@ -188,7 +206,7 @@ function Upload() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter note title"
+            placeholder="Enter note title / teacher name etc."
             className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500"
             required
           />
