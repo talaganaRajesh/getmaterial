@@ -17,6 +17,8 @@ function Upload() {
 
   const [contributorName, setContributorName] = useState('');
 
+  const [module, setModule] = useState('');
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -75,6 +77,7 @@ function Upload() {
     formData.append('semester', semester);
     formData.append('subject', subject);
     formData.append('contributorName', contributorName);
+    formData.append('module', module);
 
 
     try {
@@ -94,6 +97,7 @@ function Upload() {
         semester,
         subject,
         contributorName,
+        module,
         fileUrl: response.data.fileLink,
         fileId: response.data.fileId
       };
@@ -115,22 +119,6 @@ function Upload() {
     } finally {
       setUploading(false);
     }
-
-
-
-    // // Store note details in Firestore
-    // const noteData = {
-    //   title,
-    //   semester,
-    //   subject,
-    //   fileId: driveResponse.data.fileId,
-    //   fileLink: driveResponse.data.fileLink,
-    //   uploadedBy: user.uid
-    // };
-
-    // // Use the addNote function from firebase.js
-    // await addNote(noteData);
-
 
 
 
@@ -174,6 +162,22 @@ function Upload() {
             <option value="">Select Semester</option>
             {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
               <option key={sem} value={sem}>Semester {sem}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Module
+          </label>
+          <select
+            value={module}
+            onChange={(e) => setModule(e.target.value)}
+            className="w-full p-2 border rounded focus:ring-1 focus:ring-green-500"
+          >
+            <option value="">Select Module</option>
+            {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5","assignments","questions"].map(mod => (
+              <option key={mod} value={mod}>{mod}</option>
             ))}
           </select>
         </div>

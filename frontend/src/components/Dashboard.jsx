@@ -16,24 +16,35 @@ function Dashboard() {
   const [semesterFilter, setSemesterFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [nameFilter, setNameFilter] = useState(''); // Add nameFilter state
+  const [moduleFilter, setModuleFilter] = useState('');
 
   // Unique semesters and subjects for dropdowns
   const [uniqueSemesters, setUniqueSemesters] = useState([]);
   const [uniqueSubjects, setUniqueSubjects] = useState([]);
+  const [uniqueModules, setUniqueModules] = useState([]);
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
         setLoading(true);
         const fetchedNotes = await getNotes();
-        setNotes(fetchedNotes);
+
+        // Normalize subject names
+        const normalizedNotes = fetchedNotes.map(note => ({
+          ...note,
+          subject: note.subject.trim().toLowerCase(), // Normalize subject
+        }));
+
+        setNotes(normalizedNotes);
 
         // Extract unique semesters and subjects
-        const semesters = [...new Set(fetchedNotes.map(note => note.semester))];
-        const subjects = [...new Set(fetchedNotes.map(note => note.subject))];
+        const semesters = [...new Set(normalizedNotes.map(note => note.semester))];
+        const subjects = [...new Set(normalizedNotes.map(note => note.subject))];
+        const modules = [...new Set(normalizedNotes.map(note => note.module))];
 
         setUniqueSemesters(semesters);
         setUniqueSubjects(subjects);
+        setUniqueModules(modules);
 
         setError(null);
       } catch (error) {
@@ -54,11 +65,12 @@ function Dashboard() {
       note.name.toLowerCase().includes(titleFilter.toLowerCase()) &&
       (semesterFilter === '' || note.semester === semesterFilter) &&
       (subjectFilter === '' || note.subject === subjectFilter) &&
+      (moduleFilter === '' || note.setModuleFilter === moduleFilter) && // Filter by contributor name
       (nameFilter === '' || note.contributorName === nameFilter) // Filter by contributor name
     );
 
     setFilteredNotes(filtered);
-  }, [notes, titleFilter, semesterFilter, subjectFilter, nameFilter]); // Include nameFilter
+  }, [notes, titleFilter, semesterFilter, subjectFilter, nameFilter, moduleFilter]); // Include nameFilter
 
   // Reset filters
   const resetFilters = () => {
@@ -66,6 +78,7 @@ function Dashboard() {
     setSemesterFilter('');
     setSubjectFilter('');
     setNameFilter(''); // Reset nameFilter as well
+    setModuleFilter('');
   };
 
   return (
@@ -74,7 +87,7 @@ function Dashboard() {
 
       {/* Filter Panel */}
       <div className="mb-6 bg-gray-100 p-4 rounded-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Title Filter */}
           <div>
             <label htmlFor="titleFilter" className="block text-sm font-medium text-gray-700">
@@ -110,6 +123,7 @@ function Dashboard() {
             </select>
           </div>
 
+
           {/* Subject Filter */}
           <div>
             <label htmlFor="subjectFilter" className="block text-sm font-medium text-gray-700">
@@ -129,6 +143,28 @@ function Dashboard() {
               ))}
             </select>
           </div>
+
+
+          {/* module Filter */}
+          <div>
+            <label htmlFor="semesterFilter" className="block text-sm font-medium text-gray-700">
+              Module
+            </label>
+            <select
+              id="moduleFilter"
+              value={moduleFilter}
+              onChange={(e) => setModuleFilter(e.target.value)}
+              className="mt-1 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              <option value="">All Modules</option>
+              {uniqueModules.map(module => (
+                <option key={module} value={module}>
+                  {module}
+                </option>
+              ))}
+            </select>
+          </div>
+
 
           {/* Reset Filters Button */}
           <div className="mt-4 p-3 text-center">
@@ -152,6 +188,7 @@ function Dashboard() {
             <h2 className="text-xl font-bold mb-2">{note.name}</h2>
             <p className="text-gray-600 mb-2">Semester: {note.semester}</p>
             <p className="text-gray-600 mb-2">Subject: {note.subject}</p>
+            <p className="text-gray-600 mb-2">Module: {note.module}</p>
 
 
             <p className='text-gray-600 mb-4'>Uploaded by:
@@ -189,9 +226,9 @@ function Dashboard() {
       </div>
       <div className='text-center opacity-90 cursor-pointer pt-7'>
         <a href="https://github.com/talaganaRajesh" target='_blank'>
-        made with 💖 by <span className='text-green-700 font-bold'>Rajesh</span>
+          made with 💖 by <span className='text-green-700 font-bold'>Rajesh</span>
         </a>
-        </div>
+      </div>
     </div>
   );
 }
