@@ -35,7 +35,7 @@ function Dashboard() {
         // Normalize subject names
         const normalizedNotes = fetchedNotes.map(note => ({
           ...note,
-          subject: note.subject.trim().toLowerCase(), // Normalize subject
+          subject: note.subject.trim().toLowerCase(), // Normalize subject jjjjjjjjsjust test comment
         }));
 
         setNotes(normalizedNotes);
