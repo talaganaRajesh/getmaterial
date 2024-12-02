@@ -24,7 +24,7 @@ function ContributorAuth() {
     e.preventDefault();
 
     if (!email.endsWith('@nist.edu')) {
-      alert('Please use your NIST email address');
+      alert('Please use your NIST email address (valid one)');
       return;
     }
     if(email==='himanshu.mishra.cse.2022@nist.edu'){
@@ -36,7 +36,7 @@ function ContributorAuth() {
     try {
 
 
-      const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=1e54deeedf3c4d29a2c974c127b67a9f&email=${email}`);
+      const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=b93348664aa54a598ade846a4d2e6ab6&email=${email}`);
       const data = await response.json();
 
       // Check if the email is valid and exists
