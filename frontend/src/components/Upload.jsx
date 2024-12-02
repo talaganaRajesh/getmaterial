@@ -11,7 +11,7 @@ function Upload() {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [semester, setSemester] = useState('');
-  const [subject, setSubject] = useState('');
+  // const [subject, setSubject] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -89,6 +89,44 @@ function Upload() {
 
 
 
+  const [subjects, setSubjects] = useState(['Not mentioned','Artificial intelligence',
+    'C',
+    'CI',
+    'CNDC',
+    'Computer architecture COA',
+    'DAA',
+    'Data structures',
+    'DBMS',
+    'Dec',
+    'Digital electronics',
+    'Discrete mathematics',
+    'Flat',
+    'IIT',
+    'GEE',
+    'Java',
+    'Operating system',
+    'Python',
+    'Syllabus',
+    'wt']
+   );
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [newSubject, setNewSubject] = useState('');
+
+
+  const handleAddSubject = () => {
+    if (newSubject && !subjects.includes(newSubject)) {
+      setSubjects([...subjects, newSubject]);
+      setSelectedSubject(newSubject);
+      setNewSubject('');
+    } else {
+      setError('Subject already exists or is empty'); // Use state instead of alert
+    }
+  };
+
+
+
+
+
 
 
 
@@ -120,12 +158,12 @@ function Upload() {
     formData.append('file', file);
     formData.append('title', title);
     formData.append('semester', semester);
-    formData.append('subject', subject);
+    formData.append('subject', selectedSubject);
     formData.append('contributorName', contributorName);
     formData.append('module', module);
 
 
-    
+
     // Start interval to change messages
     const interval = setInterval(() => {
       setMessage(messages[Math.floor(Math.random() * messages.length)]);
@@ -150,7 +188,7 @@ function Upload() {
       const noteData = {
         name: title,
         semester,
-        subject,
+        subject: selectedSubject,
         contributorName,
         module,
         fileUrl: response.data.fileLink,
@@ -201,14 +239,14 @@ function Upload() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Note Title / teacher name
+            Teacher name / Note title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter note title / teacher name etc."
-            className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500"
+            className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500 font-semibold"
             required
           />
         </div>
@@ -230,6 +268,50 @@ function Upload() {
           </select>
         </div>
 
+
+
+        <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Subject (if not mentioned, select 'Not mentioned')
+      </label>
+      <select
+        value={selectedSubject}
+        onChange={(e) => setSelectedSubject(e.target.value)}
+        className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500"
+      >
+        <option value="">Select a subject</option>
+        {subjects.map((subject, index) => (
+          <option key={index} value={subject}>
+            {subject}
+          </option>
+        ))}
+      </select>
+
+      {/* Conditionally render the input field when 'Not mentioned' is selected */}
+      {selectedSubject === 'Not mentioned' && (
+        <div className="mt-2 flex">
+          <input
+            type="text"
+            value={newSubject}
+            onChange={(e) => setNewSubject(e.target.value)}
+            placeholder="Add new subject"
+            className="w-full p-2 border rounded-l-lg focus:ring-1 focus:ring-green-500"
+          />
+          <button
+            onClick={handleAddSubject}
+            className="bg-green-500 text-white px-4 rounded-r-lg"
+          >
+            Add
+          </button>
+        </div>
+      )}
+    </div>
+
+
+
+
+
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Module
@@ -247,7 +329,7 @@ function Upload() {
           </select>
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Subject
           </label>
@@ -259,7 +341,7 @@ function Upload() {
             className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-green-500"
             required
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
