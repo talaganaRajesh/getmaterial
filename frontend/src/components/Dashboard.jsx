@@ -227,11 +227,11 @@ function Dashboard() {
           </div>
         )}
       </div>
-      <div className='text-center opacity-90 cursor-pointer pt-7 flex flex-col'>
-        <a href="https://github.com/talaganaRajesh" target='_blank'>
-          made with 💖 by <span className='text-green-700 font-bold'>Rajesh</span>
+      <div className='text-center opacity-90 cursor-pointer pt-14 flex flex-col'>
+        <a href="https://www.linkedin.com/in/talagana-rajesh-75a546289/" target='_blank'>
+          <span className='opacity-60 hover:opacity-100 transition-opacity duration-300'>Built with 💖 by</span> <span className='text-green-700 hover:text-green-600 transition-colors duration-300 font-bold'>Rajesh</span>
         </a>
-        {!loading && <a href="https://forms.gle/pA75Prd8ku7t2n9n6" className='mt-3 text-blue-700 hover:underline' target='_blank'>Feedback</a>}
+        {!loading && <a href="https://forms.gle/pA75Prd8ku7t2n9n6" className='mt-3 text-black hover:text-blue-600 hover:underline' target='_blank'>Feedback</a>}
       </div>
     </div>
   );
