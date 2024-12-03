@@ -35,7 +35,7 @@ function Dashboard() {
         // Normalize subject names
         const normalizedNotes = fetchedNotes.map(note => ({
           ...note,
-          subject: note.subject.trim().toLowerCase(), // Normalize subject jjjjjjjjsjust test comment
+          subject: note.subject.trim().toUpperCase(), // Normalize subject jjjjjjjjsjust test comment
         }));
 
         setNotes(normalizedNotes);
@@ -150,7 +150,7 @@ function Dashboard() {
 
           {/* module Filter */}
           <div>
-            <label htmlFor="semesterFilter" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="moduleFilter" className="block text-sm font-medium text-gray-700">
               Module
             </label>
             <select
@@ -189,10 +189,49 @@ function Dashboard() {
         {filteredNotes.map((note) => (
           <div key={note.id} className="bg-white p-4 rounded shadow">
             <h2 className="text-xl font-bold mb-2">{note.name}</h2>
-            <p className="text-gray-600 mb-2">Semester: {note.semester}</p>
-            <p className="text-gray-600 mb-2">Subject: {note.subject}</p>
-            <p className="text-gray-600 mb-2">@{note.module}</p>
+            
+            <p className='text-gray-600 mb-2'>Semester:
+              <span
+                onClick={() => setSemesterFilter(note.semester)}
+                className='text-gray-600 text-center group ml-1 hover:text-green-500 transition-colors duration-300 cursor-pointer relative'
+              >
+                {note.semester || "unknown"}
 
+                {/* Tooltip */}
+                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 py-3 px-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  View all notes of sem {note.semester}
+                </span>
+              </span>
+            </p>
+
+            <p className='text-gray-600 mb-2'>Subject:
+              <span
+                onClick={() => setSubjectFilter(note.subject)}
+                className='text-gray-600 group ml-1 hover:text-green-500 transition-colors duration-300 cursor-pointer relative'
+              >
+                {note.subject || "unknown"}
+
+                {/* Tooltip */}
+                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 py-3 px-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  View all notes of {note.subject}
+                </span>
+              </span>
+            </p>
+
+
+            <p className='text-gray-600 mb-2'>@
+              <span
+                onClick={() => setModuleFilter(note.module)}
+                className='text-gray-600 group hover:text-green-500 transition-colors duration-300 cursor-pointer relative'
+              >
+                {note.module || "unknown"}
+
+                {/* Tooltip */}
+                <span className="tooltip absolute bottom-full w-full transform -translate-x-1/2 mt-2 py-3 px-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  View all notes of {note.module}
+                </span>
+              </span>
+            </p>
 
             <p className='text-gray-600 mb-4'>Uploaded by:
               <span

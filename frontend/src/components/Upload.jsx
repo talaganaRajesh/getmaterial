@@ -89,7 +89,7 @@ function Upload() {
 
 
 
-  const [subjects, setSubjects] = useState(['Not mentioned','Artificial intelligence',
+  const [subjects, setSubjects] = useState(['Not mentioned','AI',
     'C',
     'CI',
     'CNDC',
