@@ -1,8 +1,10 @@
 {
   "name": "server",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node uploadserv.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,14 +12,18 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.7",
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.0.1",
     "googleapis": "^144.0.0",
     "multer": "^1.4.5-lts.1",
+    "openai": "^5.20.2",
     "path": "^0.12.7",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.4.149",
     "safe-buffer": "^5.2.1"
   },
   "description": ""

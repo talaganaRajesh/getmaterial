@@ -2,8 +2,15 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import axios from 'axios';
+
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+GlobalWorkerOptions.workerSrc = workerSrc;
+
 import { auth, addNote, getNotes } from '../firebase';
 import { normalizeForStorage, toTitleCase } from '../lib/utils';
+
 import './loader.css'
 
 import CustomSelect from './CustomSelect';
@@ -13,6 +20,14 @@ import PopUpMessage from "./PopUpMessage";
 import { UploadIcon } from 'lucide-react';
 
 
+const extractPreviewText = async (file) => {
+    const typedarray = new Uint8Array(await file.arrayBuffer());
+    const pdf = await getDocument(typedarray).promise;
+    const page = await pdf.getPage(1);
+    const content = await page.getTextContent();
+    const strings = content.items.map(item => item.str);
+    return strings.join(' ').slice(0, 1000); // Limit preview to first 1000 characters
+};
 
 
 function Upload() {
@@ -187,69 +202,89 @@ function Upload() {
   
 
 
-  const handleFileChange = async (e) => {
+const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.size > 500 * 1024 * 1024) { // 500MB limit
-        setError('File size must be less than 500MB');
-        return;
-      }
+        if (selectedFile.size > 500 * 1024 * 1024) { // 500MB limit
+            setError('File size must be less than 500MB');
+            return;
+        }
 
-      if (selectedFile.type.startsWith('video/')) {
-        setError('Video files are not allowed');
-        return;
-      }
+        if (selectedFile.type.startsWith('video/')) {
+            setError('Video files are not allowed');
+            return;
+        }
 
-      if (selectedFile.type.startsWith('audio/')) {
-        setError('Audio files are not allowed');
-        return;
-      }
+        if (selectedFile.type.startsWith('audio/')) {
+            setError('Audio files are not allowed');
+            return;
+        }
 
-      setFile(selectedFile);
-      setError(null);
+        setFile(selectedFile);
+        setError(null);
 
-      try {
+        try {
+            setFileUploaded(false);
+            setFileUploading(true);
 
-        setFileUploaded(false);
-        setFileUploading(true);
+            // Extract preview text
+            const previewText = await extractPreviewText(selectedFile);
 
+            // Send preview text to moderation endpoint
+            const modResponse = await axios.post(
+                'http://localhost:5000/moderate', // Change this to your backend URL
+                { text: previewText },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
 
-        // Upload file to Google Drive
-        const user = auth.currentUser;
-        if (!user) throw new Error('User not authenticated');
+            if (modResponse.data.flagged) {
+                setError('This file contains inappropriate content and cannot be uploaded.');
+                setFile(null);
+                setFileUploading(false);
+                return;
+            }
 
-        const idToken = await user.getIdToken();
+            // Proceed with file upload if not flagged
+            const user = auth.currentUser;
+            if (!user) throw new Error('User not authenticated');
 
+            const idToken = await user.getIdToken();
 
-        const formData = new FormData();
-        formData.append('file', selectedFile);
+            const formData = new FormData();
+            formData.append('file', selectedFile);
 
-        const response = await axios.post(
-          'https://getmaterial-fq27.onrender.com',
-          formData,
-          {
-            headers: {
-              'Authorization': `Bearer ${idToken}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+            const uploadResponse = await axios.post(
+                // 'https://getmaterial-fq27.onrender.com',  // Your upload endpoint
 
-        const { fileLink, fileId } = response.data;
+                'http://localhost:10000', // Your upload endpoint for testing
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
 
-        // Save the uploaded file's link and ID to state
-        setUploadedFileLink(fileLink);
-        setUploadedFileId(fileId);
+            const { fileLink, fileId } = uploadResponse.data;
 
-        setFileUploaded(true);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        setError('Failed to upload file. Please try again by refreshing.');
-        setFileUploaded(false)
-      }
+            setUploadedFileLink(fileLink);
+            setUploadedFileId(fileId);
+            setFileUploaded(true);
 
+        } catch (error) {
+            console.error('Error processing file:', error);
+            setError('Failed to upload file. Please try again.');
+            setFileUploaded(false);
+        } finally {
+            setFileUploading(false);
+        }
     }
-  };
+};
 
 
   const [selectedSubject, setSelectedSubject] = useState('');

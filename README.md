@@ -23,6 +23,7 @@ GetMaterial allows students to access notes shared by their seniors, fostering a
 ## 🧑‍💻 Setup Guide
 
 1. **Clone the Repository:**
+
    ```bash
    git clone https://github.com/talaganaRajesh/getmaterial.git
    cd getmaterial
@@ -30,10 +31,12 @@ GetMaterial allows students to access notes shared by their seniors, fostering a
 
 Install Dependencies:
 
-cd frontend
-npm install
-cd ../server
-npm install
+      ```bash
+      cd frontend
+      npm install
+      cd ../server
+      npm install
+      ```
 
 
 
@@ -43,15 +46,22 @@ Create a Firebase project.
 Update the .env files in both the frontend and server directories with your Firebase credentials.
 Start the Application:
 
+
 # Frontend
-cd frontend
-npm start
+
+   ```bash
+   cd frontend
+   npm start
+   ```
 
 # Backend
-cd ../server
-npm start
-Access the App:
-Open http://localhost:3000 to view the app locally.
+
+   ```bash
+   cd ../server
+   npm start
+   Access the App:
+   Open http://localhost:3000 to view the app locally.
+   ```
 
 🤝 Contribution Guidelines
 Fork the repository and create a new branch for your feature.
