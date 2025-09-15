@@ -216,7 +216,11 @@ function Upload() {
 
         // Upload file to Google Drive
         const user = auth.currentUser;
-        if (!user) throw new Error('User not authenticated');
+        if (!user) {
+          navigate('/auth');
+          throw new Error('User not authenticated');
+        }
+
 
         const idToken = await user.getIdToken();
 
