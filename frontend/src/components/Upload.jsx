@@ -224,16 +224,34 @@ function Upload() {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const response = await axios.post(
-          'https://getmaterial-fq27.onrender.com',
-          formData,
-          {
-            headers: {
-              'Authorization': `Bearer ${idToken}`,
-              'Content-Type': 'multipart/form-data',
-            },
+        const attemptUpload = async (token) => {
+          return axios.post(
+            'https://getmaterial-fq27.onrender.com',
+            formData,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+        };
+
+        let response;
+        try {
+          response = await attemptUpload(idToken);
+        } catch (err) {
+          if (err?.response?.status === 401) {
+            try {
+              const fresh = await user.getIdToken(true); // force refresh
+              response = await attemptUpload(fresh);
+            } catch (retryErr) {
+              throw retryErr;
+            }
+          } else {
+            throw err;
           }
-        );
+        }
 
         const { fileLink, fileId } = response.data;
 
@@ -244,7 +262,20 @@ function Upload() {
         setFileUploaded(true);
       } catch (error) {
         console.error('Error uploading file:', error);
-        setError('Failed to upload file. Please try again by refreshing.');
+        if (error?.response?.status === 401) {
+          setError('Authorization failed (401). Re-login and ensure a verified .edu email.');
+        } else if (error?.response?.status === 403) {
+          const code = error?.response?.data?.code;
+          if (code === 'NON_EDU_EMAIL') {
+            setError('Upload blocked: only .edu emails allowed.');
+          } else if (code === 'EMAIL_NOT_VERIFIED') {
+            setError('Please verify your email before uploading.');
+          } else {
+            setError('Access denied (403).');
+          }
+        } else {
+          setError('Failed to upload file. Please refresh and try again.');
+        }
         setFileUploaded(false)
       }
 

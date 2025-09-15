@@ -67,52 +67,60 @@ try {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
 
-// Middleware to verify Firebase token and validate .edu email
+// Middleware to verify Firebase token and validate .edu email (enhanced diagnostics)
 const verifyTokenAndEduEmail = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No valid authorization token provided' });
+      return res.status(401).json({ code: 'NO_TOKEN', message: 'No valid authorization token provided' });
     }
 
     const token = authHeader.split(' ')[1];
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    
-    // SERVER-SIDE EMAIL VALIDATION - Cannot be bypassed!
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token, true); // enforce revocation check
+    } catch (verifyErr) {
+      console.error('verifyIdToken failed:', verifyErr?.code || verifyErr.message);
+      return res.status(401).json({ code: 'VERIFY_FAILED', message: 'Invalid or expired token' });
+    }
+
     if (!decodedToken.email || !decodedToken.email.endsWith('.edu')) {
-      // If user somehow got past frontend validation, delete their account
       try {
         await admin.auth().deleteUser(decodedToken.uid);
-        console.log(`Deleted unauthorized user account: ${decodedToken.email}`);
+        console.log(`Deleted unauthorized non-.edu account: ${decodedToken.email}`);
       } catch (deleteError) {
         console.error('Error deleting unauthorized user:', deleteError);
       }
-      
-      return res.status(403).json({ 
+      return res.status(403).json({
+        code: 'NON_EDU_EMAIL',
         message: 'Access denied. Only .edu email addresses are allowed.',
-        email: decodedToken.email 
+        email: decodedToken.email || null
       });
     }
 
-    // Check if email is verified (additional security)
     if (!decodedToken.email_verified) {
-      return res.status(403).json({ 
-        message: 'Email not verified. Please verify your email before uploading files.' 
+      return res.status(403).json({
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email not verified. Please verify your email before uploading files.'
       });
     }
 
-    // Add user info to request for use in endpoints
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    console.error('Token verification middleware unexpected error:', error);
+    return res.status(401).json({ code: 'UNEXPECTED', message: 'Authorization failed' });
   }
 };
 
 
 
-app.use(cors());
+// Expanded CORS (adjust origin in production)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Upload endpoint with authentication
