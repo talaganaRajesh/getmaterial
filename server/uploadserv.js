@@ -9,18 +9,6 @@ require('dotenv').config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// // Initialize Google Drive API with error handling
-// let drive;
-// try {
-//   const auth = new google.auth.GoogleAuth({
-//     keyFile: path.join(__dirname, 'google-drive-credentials.json'),
-//     scopes: ['https://www.googleapis.com/auth/drive'], // Full access to Drive
-//   });
-//   drive = google.drive({ version: 'v3', auth });
-//   console.log('Google Drive API initialized successfully');
-// } catch (error) {
-//   console.error('Error initializing Google Drive API:', error);
-// }
 
 
 
