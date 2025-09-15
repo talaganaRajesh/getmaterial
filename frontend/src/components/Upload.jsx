@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import axios from 'axios';
+import { signOut } from 'firebase/auth';
 import { auth, addNote, getNotes } from '../firebase';
 import { normalizeForStorage, toTitleCase } from '../lib/utils';
 import './loader.css'
@@ -17,6 +18,11 @@ import { UploadIcon } from 'lucide-react';
 
 function Upload() {
   const [subjects, setSubjects] = useState([]);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const navigate = useNavigate();
+
 
 
 
@@ -59,15 +65,28 @@ function Upload() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        setContributorName(user.displayName);
+        setContributorName(user.displayName || user.email || 'Anonymous');
+        setIsAuthenticated(true);
       } else {
         setContributorName("");
+        setIsAuthenticated(false);
       }
+      setAuthLoading(false);
     });
 
     // Cleanup the listener on unmount
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
+
+  // Separate effect to handle redirects after auth state is determined
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setError(''); // Clear any previous errors
+      navigate('/auth');
+    } else if (!authLoading && isAuthenticated) {
+      setError(''); // Clear auth-related errors when authenticated
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
 
 
@@ -77,7 +96,6 @@ function Upload() {
   // const [subject, setSubject] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   const [contributorName, setContributorName] = useState('');
 
@@ -167,22 +185,21 @@ function Upload() {
 
 
   useEffect(() => {
-    const preAuthenticate = async () => {
-  
-      try {
-        auth.onAuthStateChanged(async (user) => {  // Wait for auth state
-          if (user) {
-            await user.getIdToken();
-          } else {
-            console.log("No user authenticated");
-          }
-        });
-      } catch (error) {
-        console.error("Error pre-authenticating Google Drive:", error);
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log("User authenticated:", user.email);
+        try {
+          // Pre-fetch token to warm up authentication
+          await user.getIdToken();
+        } catch (error) {
+          console.error("Error pre-fetching token:", error);
+        }
+      } else {
+        console.log("No user authenticated");
       }
-    };
-  
-    preAuthenticate();
+    });
+
+    return () => unsubscribe();
   }, []);
   
 
@@ -215,16 +232,36 @@ function Upload() {
 
 
         // Upload file to Google Drive
-        const user = auth.currentUser;
-        if (!user) throw new Error('User not authenticated');
+        if (!isAuthenticated || authLoading) {
+          setError('Please wait while we verify your authentication...');
+          return;
+        }
 
-        const idToken = await user.getIdToken();
+        const user = auth.currentUser;
+        if (!user) {
+          setError('Authentication required. Redirecting to login...');
+          navigate('/auth');
+          return;
+        }
+
+        // Check if user email ends with .edu
+        if (!user.email || !user.email.endsWith('.edu')) {
+          setError('Only .edu email addresses are allowed. Please use your college email.');
+          await auth.signOut();
+          navigate('/auth');
+          return;
+        }
+
+        console.log('Attempting to get ID token for user:', user.email);
+        const idToken = await user.getIdToken(true); // Force refresh token
+        console.log('Token obtained successfully');
 
 
         const formData = new FormData();
         formData.append('file', selectedFile);
 
         const attemptUpload = async (token) => {
+          console.log('Attempting upload with token');
           return axios.post(
             'https://getmaterial-fq27.onrender.com',
             formData,
@@ -233,20 +270,32 @@ function Upload() {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data',
               },
+              timeout: 300000, // 5 minutes timeout
             }
           );
         };
 
         let response;
         try {
+          console.log('Making first upload attempt...');
           response = await attemptUpload(idToken);
+          console.log('Upload successful:', response.data);
         } catch (err) {
+          console.error('First upload attempt failed:', err?.response?.status, err?.response?.data);
           if (err?.response?.status === 401) {
             try {
+              console.log('Token expired, refreshing...');
               const fresh = await user.getIdToken(true); // force refresh
+              console.log('New token obtained, retrying upload...');
               response = await attemptUpload(fresh);
+              console.log('Retry upload successful:', response.data);
             } catch (retryErr) {
-              throw retryErr;
+              console.error('Retry upload failed:', retryErr?.response?.status, retryErr?.response?.data);
+              // Token refresh failed, user needs to re-authenticate
+              await auth.signOut();
+              navigate('/auth');
+              setError('Your session has expired. Please log in again.');
+              return;
             }
           } else {
             throw err;
@@ -263,13 +312,11 @@ function Upload() {
       } catch (error) {
         console.error('Error uploading file:', error);
         if (error?.response?.status === 401) {
-          setError('Authorization failed (401). Re-login and ensure a verified .edu email.');
+          setError('Your session has expired. Please log in again.');
         } else if (error?.response?.status === 403) {
           const code = error?.response?.data?.code;
           if (code === 'NON_EDU_EMAIL') {
             setError('Upload blocked: only .edu emails allowed.');
-          } else if (code === 'EMAIL_NOT_VERIFIED') {
-            setError('Please verify your email before uploading.');
           } else {
             setError('Access denied (403).');
           }
@@ -322,11 +369,21 @@ function Upload() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = auth.currentUser;
 
-    if (!user) {
+    if (authLoading) {
+      setError('Please wait while we verify your authentication...');
+      return;
+    }
+
+    if (!isAuthenticated) {
       setError('You must be authenticated to submit the form.');
-      alert('Redirecting to login page...');
+      navigate('/auth');
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      setError('Authentication error. Please log in again.');
       navigate('/auth');
       return;
     }
@@ -387,22 +444,38 @@ function Upload() {
 
   return (
     <div className="container mx-auto md:mt-20 mt-24 px-4 pt-2">
-      <h1 className="text-3xl font-bold md:my-6 mb-3 text-center">Upload Note</h1>
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+      {authLoading ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-semibold">Verifying authentication...</p>
+          </div>
         </div>
-      )}
+      ) : !isAuthenticated ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 font-semibold mb-4">Authentication required</p>
+            <p className="text-gray-600">Redirecting to login page...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold md:my-6 mb-3 text-center">Upload Note</h1>
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
 
-      {notesUploaded && (
-        <PopUpMessage
-          message="Notes Uploaded 🎉🎉!"
-          type="success" // 'info', 'error', 'warning', or 'success'
-          duration={5000} // Duration in milliseconds
-        />
-      )}
+          {notesUploaded && (
+            <PopUpMessage
+              message="Notes Uploaded 🎉🎉!"
+              type="success"
+              duration={5000}
+            />
+          )}
 
-      <form onSubmit={handleSubmit} className="upload-container max-w-md bg-gradient-to-r px-8 py-7 rounded-2xl mx-auto space-y-4">
+          <form onSubmit={handleSubmit} className="upload-container max-w-md bg-gradient-to-r px-8 py-7 rounded-2xl mx-auto space-y-4">
 
         {fileUploading ? (
 
@@ -438,14 +511,16 @@ function Upload() {
             onChange={handleFileChange}
             className="hidden"
             id="file-upload"
+            disabled={!isAuthenticated || authLoading}
           />
           <label
             htmlFor="file-upload"
-            className="w-full text-center items-center  flex justify-center p-4 border-dashed border-black cursor-pointer hover:bg-green-00 transition-all border rounded-xl focus:ring-2 focus:ring-green-500"
+            className={`w-full text-center items-center flex justify-center p-4 border-dashed border-black cursor-pointer hover:bg-green-00 transition-all border rounded-xl focus:ring-2 focus:ring-green-500 ${
+              !isAuthenticated || authLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <UploadIcon className="inline-block mr-5 size-5 items-center" />
-            Upload File
-
+            {authLoading ? 'Verifying...' : !isAuthenticated ? 'Authentication Required' : 'Upload File'}
           </label>
           </div>
         </div>)}
@@ -458,11 +533,20 @@ function Upload() {
             Subject
           </label> */}
 
-          <CustomSelect
-            options={subjects}
-            placeholder={selectedSubject || "Select a subject"}
-            onChange={(selectedOption) => setSelectedSubject(selectedOption)}
-          />
+          <div className={`relative ${!isAuthenticated || authLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+            <CustomSelect
+              options={subjects}
+              placeholder={selectedSubject || "Select a subject"}
+              onChange={(selectedOption) => setSelectedSubject(selectedOption)}
+            />
+            {(!isAuthenticated || authLoading) && (
+              <div className="absolute inset-0 bg-gray-100 bg-opacity-50 rounded-lg flex items-center justify-center">
+                <span className="text-gray-500 text-sm">
+                  {authLoading ? 'Verifying...' : 'Authentication required'}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Conditionally render the input field when 'Not mentioned' is selected */}
           {selectedSubject === 'Not mentioned' && (
@@ -475,6 +559,7 @@ function Upload() {
                 placeholder="Enter new subject name..."
                 className="w-full p-2 border-2 border-green-500 rounded-lg focus:ring-1 focus:ring-green-500"
                 required
+                disabled={!isAuthenticated || authLoading}
               />
               
             </div>
@@ -499,6 +584,7 @@ function Upload() {
               onChange={(e) => setSemester(e.target.value)}
               className="w-full p-2 border md:hover:bg-yellow-50 cursor-pointer transition-all border-gray-400 rounded-lg"
               required
+              disabled={!isAuthenticated || authLoading}
             >
               <option value="">Select Semester</option>
               {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
@@ -517,6 +603,7 @@ function Upload() {
               onChange={(e) => setModule(e.target.value)}
               className="w-full p-2 border-gray-400 md:hover:bg-yellow-50 cursor-pointer transition-all border rounded-lg"
               required
+              disabled={!isAuthenticated || authLoading}
             >
               <option value="">Select Module</option>
               {["Module: 1", "Module: 2", "Module: 3", "Module: 4", "Module: 5", "assignment 1","assignment 2","All modules","Module: 1,2","Module: 2,3","Module: 3,4","Module: 4,5","Book", "questions", "others"].map(mod => (
@@ -538,6 +625,7 @@ function Upload() {
             placeholder="Ex: NIST college , Class notes"
             className="w-full p-2 border rounded-lg focus:ring-1 font-semibold"
             required
+            disabled={!isAuthenticated || authLoading}
           />
         </div>
 
@@ -552,19 +640,20 @@ function Upload() {
             onChange={(e) => setContributorName(e.target.value)}
             placeholder="Enter your name"
             className="w-full p-2 font-semibold border rounded-lg focus:ring-1"
+            disabled={!isAuthenticated || authLoading}
           />
         </div>
 
 
         <button
           type="submit"
-          disabled={uploading || !file || !fileUploaded}
-          className={`w-full ${uploading || !file || !fileUploaded
+          disabled={uploading || !file || !fileUploaded || !isAuthenticated || authLoading}
+          className={`w-full ${uploading || !file || !fileUploaded || !isAuthenticated || authLoading
             ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
             : 'bg-green-500 hover:bg-green-600'
             } text-black font-semibold  p-2 rounded-lg transition duration-200`}
         >
-          {uploading ? 'Uploading...' : 'Upload Note'}
+          {authLoading ? 'Verifying...' : !isAuthenticated ? 'Authentication Required' : uploading ? 'Uploading...' : 'Upload Note'}
         </button>
       </form>
 
@@ -581,11 +670,8 @@ function Upload() {
           <h1 className='loader'></h1>
         </div>
       )}
-
-
-
-
-
+        </>
+      )}
     </div>
   );
 }

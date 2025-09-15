@@ -49,16 +49,16 @@ try {
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
-        type: process.env.FIREBASE_TYPE,
-        project_id: process.env.FIREBASE_PROJECT_ID,
-        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        client_email: process.env.FIREBASE_CLIENT_EMAIL,
-        client_id: process.env.FIREBASE_CLIENT_ID,
-        auth_uri: process.env.FIREBASE_AUTH_URI,
-        token_uri: process.env.FIREBASE_TOKEN_URI,
-        auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
-        client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+        type: process.env.TYPE,
+        project_id: process.env.PROJECT_ID,
+        private_key_id: process.env.PRIVATE_KEY_ID,
+        private_key: process.env.PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: process.env.CLIENT_EMAIL,
+        client_id: process.env.CLIENT_ID,
+        auth_uri: process.env.AUTH_URI,
+        token_uri: process.env.TOKEN_URI,
+        auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+        client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
       }),
     });
     console.log('Firebase Admin SDK initialized successfully');
@@ -70,21 +70,26 @@ try {
 // Middleware to verify Firebase token and validate .edu email (enhanced diagnostics)
 const verifyTokenAndEduEmail = async (req, res, next) => {
   try {
+    console.log('Authentication middleware called');
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No valid authorization header found');
       return res.status(401).json({ code: 'NO_TOKEN', message: 'No valid authorization token provided' });
     }
 
     const token = authHeader.split(' ')[1];
+    console.log('Token extracted, attempting verification...');
     let decodedToken;
     try {
       decodedToken = await admin.auth().verifyIdToken(token, true); // enforce revocation check
+      console.log('Token verified successfully for user:', decodedToken.email);
     } catch (verifyErr) {
       console.error('verifyIdToken failed:', verifyErr?.code || verifyErr.message);
       return res.status(401).json({ code: 'VERIFY_FAILED', message: 'Invalid or expired token' });
     }
 
     if (!decodedToken.email || !decodedToken.email.endsWith('.edu')) {
+      console.log('Non-.edu email detected:', decodedToken.email);
       try {
         await admin.auth().deleteUser(decodedToken.uid);
         console.log(`Deleted unauthorized non-.edu account: ${decodedToken.email}`);
@@ -98,12 +103,13 @@ const verifyTokenAndEduEmail = async (req, res, next) => {
       });
     }
 
-    if (!decodedToken.email_verified) {
-      return res.status(403).json({
-        code: 'EMAIL_NOT_VERIFIED',
-        message: 'Email not verified. Please verify your email before uploading files.'
-      });
-    }
+    // Note: Email verification check removed since the app uses OTP verification
+    // if (!decodedToken.email_verified) {
+    //   return res.status(403).json({
+    //     code: 'EMAIL_NOT_VERIFIED',
+    //     message: 'Email not verified. Please verify your email before uploading files.'
+    //   });
+    // }
 
     req.user = decodedToken;
     next();
@@ -117,30 +123,30 @@ const verifyTokenAndEduEmail = async (req, res, next) => {
 
 // Expanded CORS (adjust origin in production)
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://get-material.vercel.app', '*'],
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 // Upload endpoint with authentication
 app.post('/', verifyTokenAndEduEmail, upload.single('file'), async (req, res) => {
-  // console.log('Upload request received from verified user:', req.user.email);
-
-  // console.log('Request body:', req.body);
+  console.log('Upload request received from verified user:', req.user.email);
   
   if (!req.file) {
-    // console.log('No file in request');
+    console.log('No file in request');
     return res.status(400).json({ message: 'No file uploaded' });
   }
 
   if (!process.env.GOOGLE_DRIVE_FOLDER_ID) {
-    // console.error('Google Drive folder ID not configured');
+    console.error('Google Drive folder ID not configured');
     return res.status(500).json({ message: 'Server configuration error: Folder ID missing' });
   }
 
   try {
-    // console.log('Preparing file upload:', req.file.originalname);
+    console.log('Preparing file upload:', req.file.originalname, 'Size:', req.file.size);
 
     const fileMetadata = {
       name: req.file.originalname,
@@ -152,13 +158,14 @@ app.post('/', verifyTokenAndEduEmail, upload.single('file'), async (req, res) =>
       body: Readable.from(req.file.buffer), // Convert buffer to stream
     };
 
+    console.log('Uploading to Google Drive...');
     const response = await drive.files.create({
       requestBody: fileMetadata,
       media,
       fields: 'id, webViewLink',
     });
 
-    // console.log('File uploaded successfully:', response.data);
+    console.log('File uploaded successfully:', response.data);
 
     res.status(200).json({
       message: 'File uploaded successfully',
@@ -180,7 +187,18 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     googleDrive: drive ? 'initialized' : 'failed',
-    folderConfigured: !!process.env.GOOGLE_DRIVE_FOLDER_ID
+    folderConfigured: !!process.env.GOOGLE_DRIVE_FOLDER_ID,
+    firebaseAdmin: admin.apps.length > 0 ? 'initialized' : 'failed',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Test authentication endpoint
+app.post('/test-auth', verifyTokenAndEduEmail, (req, res) => {
+  res.json({
+    message: 'Authentication successful',
+    user: req.user.email,
+    timestamp: new Date().toISOString()
   });
 });
 
