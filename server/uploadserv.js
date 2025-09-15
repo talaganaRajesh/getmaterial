@@ -10,45 +10,21 @@ require('dotenv').config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// // Initialize Google Drive API with error handling
-// let drive;
-// try {
-//   const auth = new google.auth.GoogleAuth({
-//     keyFile: path.join(__dirname, 'google-drive-credentials.json'),
-//     scopes: ['https://www.googleapis.com/auth/drive'], // Full access to Drive
-//   });
-//   drive = google.drive({ version: 'v3', auth });
-//   console.log('Google Drive API initialized successfully');
-// } catch (error) {
-//   console.error('Error initializing Google Drive API:', error);
-// }
-
-
-
-// Initialize Google Drive API with credentials from .env
-const auth = new google.auth.GoogleAuth({
-  credentials: {
-    type: process.env.TYPE,
-    project_id: process.env.PROJECT_ID,
-    private_key_id: process.env.PRIVATE_KEY_ID,
-    private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
-    client_email: process.env.CLIENT_EMAIL,
-    client_id: process.env.CLIENT_ID,
-    auth_uri: process.env.AUTH_URI,
-    token_uri: process.env.TOKEN_URI,
-    auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
-    client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
-  },
-  scopes: ['https://www.googleapis.com/auth/drive'],
-});
-
-const drive = google.drive({ version: 'v3', auth });
-
-// Initialize Firebase Admin SDK
+// Initialize Google Drive API with service account file
+let drive;
 try {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
+  const auth = new google.auth.GoogleAuth({
+    keyFile: '/etc/secrets/google-drive-credentials.json',
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  });
+  drive = google.drive({ version: 'v3', auth });
+  console.log('Google Drive API initialized successfully');
+} catch (error) {
+  console.error('Error initializing Google Drive API:', error);
+  // Fallback to environment variables if secret file fails
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
         type: process.env.TYPE,
         project_id: process.env.PROJECT_ID,
         private_key_id: process.env.PRIVATE_KEY_ID,
@@ -59,9 +35,43 @@ try {
         token_uri: process.env.TOKEN_URI,
         auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
         client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
-      }),
+      },
+      scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('Firebase Admin SDK initialized successfully');
+    drive = google.drive({ version: 'v3', auth });
+    console.log('Google Drive API initialized with environment variables');
+  } catch (envError) {
+    console.error('Error initializing Google Drive API with env vars:', envError);
+  }
+}
+
+// Initialize Firebase Admin SDK
+try {
+  if (!admin.apps.length) {
+    // Try to use secret file first
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert('/etc/secrets/firebase-admin-sdk.json'),
+      });
+      console.log('Firebase Admin SDK initialized with secret file');
+    } catch (fileError) {
+      // Fallback to environment variables
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          type: process.env.TYPE,
+          project_id: process.env.PROJECT_ID,
+          private_key_id: process.env.PRIVATE_KEY_ID,
+          private_key: process.env.PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          client_email: process.env.CLIENT_EMAIL,
+          client_id: process.env.CLIENT_ID,
+          auth_uri: process.env.AUTH_URI,
+          token_uri: process.env.TOKEN_URI,
+          auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+          client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+        }),
+      });
+      console.log('Firebase Admin SDK initialized with environment variables');
+    }
   }
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
