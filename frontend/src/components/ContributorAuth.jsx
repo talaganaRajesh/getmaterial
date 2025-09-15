@@ -51,7 +51,17 @@ export default function ContributorAuth() {
     setIsLoading(prev => ({ ...prev, googleSignIn: true }));
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if the email ends with .edu
+      if (!user.email.endsWith('.edu')) {
+        // Sign out the user if they don't have an .edu email
+        await auth.signOut();
+        alert('Only .edu email addresses are allowed. Please use your college email account.');
+        return;
+      }
+      
       navigate('/upload');
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -119,9 +129,9 @@ export default function ContributorAuth() {
     e.preventDefault();
 
 
-    // NEW EMAIL DOMAIN VALIDATION
-    if (!email.endsWith('@nist.edu')) {
-      alert('NIST edu Email is required');
+    // EMAIL DOMAIN VALIDATION - Accept any .edu email
+    if (!email.endsWith('.edu')) {
+      alert('Only .edu email addresses are allowed. Please use your college email account.');
       return;
     }
 
@@ -196,6 +206,13 @@ export default function ContributorAuth() {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+
+    // EMAIL DOMAIN VALIDATION - Accept any .edu email
+    if (!email.endsWith('.edu')) {
+      alert('Only .edu email addresses are allowed. Please use your college email account.');
+      return;
+    }
+
     try {
       setIsLoading(prev => ({ ...prev, signIn: true }));
       const userCredential = await signInWithEmailAndPassword(auth, email, password);

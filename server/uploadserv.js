@@ -4,6 +4,7 @@ const { google } = require('googleapis');
 const { Readable } = require('stream'); // Import Readable for buffer handling
 const cors = require('cors');
 const path = require('path');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 const app = express();
@@ -43,14 +44,80 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: 'v3', auth });
 
+// Initialize Firebase Admin SDK
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        type: process.env.FIREBASE_TYPE,
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        client_id: process.env.FIREBASE_CLIENT_ID,
+        auth_uri: process.env.FIREBASE_AUTH_URI,
+        token_uri: process.env.FIREBASE_TOKEN_URI,
+        auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+        client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+      }),
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+  }
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+}
+
+// Middleware to verify Firebase token and validate .edu email
+const verifyTokenAndEduEmail = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No valid authorization token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    // SERVER-SIDE EMAIL VALIDATION - Cannot be bypassed!
+    if (!decodedToken.email || !decodedToken.email.endsWith('.edu')) {
+      // If user somehow got past frontend validation, delete their account
+      try {
+        await admin.auth().deleteUser(decodedToken.uid);
+        console.log(`Deleted unauthorized user account: ${decodedToken.email}`);
+      } catch (deleteError) {
+        console.error('Error deleting unauthorized user:', deleteError);
+      }
+      
+      return res.status(403).json({ 
+        message: 'Access denied. Only .edu email addresses are allowed.',
+        email: decodedToken.email 
+      });
+    }
+
+    // Check if email is verified (additional security)
+    if (!decodedToken.email_verified) {
+      return res.status(403).json({ 
+        message: 'Email not verified. Please verify your email before uploading files.' 
+      });
+    }
+
+    // Add user info to request for use in endpoints
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
 
 
 app.use(cors());
 app.use(express.json());
 
-// Upload endpoint
-app.post('/', upload.single('file'), async (req, res) => {
-  // console.log('Upload request received');
+// Upload endpoint with authentication
+app.post('/', verifyTokenAndEduEmail, upload.single('file'), async (req, res) => {
+  // console.log('Upload request received from verified user:', req.user.email);
 
   // console.log('Request body:', req.body);
   
@@ -89,6 +156,7 @@ app.post('/', upload.single('file'), async (req, res) => {
       message: 'File uploaded successfully',
       fileId: response.data.id,
       fileLink: response.data.webViewLink,
+      uploadedBy: req.user.email, // Log who uploaded
     });
   } catch (error) {
     console.error('Error uploading file:', error);
