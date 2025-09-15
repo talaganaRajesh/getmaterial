@@ -121,17 +121,78 @@ const verifyTokenAndEduEmail = async (req, res, next) => {
 
 
 
-// Expanded CORS (adjust origin in production)
+// CORS configuration for production
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://get-material.vercel.app', '*'],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'https://getmaterial.vercel.app',
+    'https://get-material.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 // Upload endpoint with authentication
+app.post('/upload', verifyTokenAndEduEmail, upload.single('file'), async (req, res) => {
+  console.log('Upload request received from verified user:', req.user.email);
+  
+  if (!req.file) {
+    console.log('No file in request');
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  if (!process.env.GOOGLE_DRIVE_FOLDER_ID) {
+    console.error('Google Drive folder ID not configured');
+    return res.status(500).json({ message: 'Server configuration error: Folder ID missing' });
+  }
+
+  try {
+    console.log('Preparing file upload:', req.file.originalname, 'Size:', req.file.size);
+
+    const fileMetadata = {
+      name: req.file.originalname,
+      parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+    };
+
+    const media = {
+      mimeType: req.file.mimetype,
+      body: Readable.from(req.file.buffer), // Convert buffer to stream
+    };
+
+    console.log('Uploading to Google Drive...');
+    const response = await drive.files.create({
+      requestBody: fileMetadata,
+      media,
+      fields: 'id, webViewLink',
+    });
+
+    console.log('File uploaded successfully:', response.data);
+
+    res.status(200).json({
+      message: 'File uploaded successfully',
+      fileId: response.data.id,
+      fileLink: response.data.webViewLink,
+      uploadedBy: req.user.email, // Log who uploaded
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ 
+      message: 'Error uploading file', 
+      error: error.message,
+    });
+  }
+});
+
+// Keep the root POST for backward compatibility
 app.post('/', verifyTokenAndEduEmail, upload.single('file'), async (req, res) => {
   console.log('Upload request received from verified user:', req.user.email);
   
@@ -189,6 +250,16 @@ app.get('/health', (req, res) => {
     googleDrive: drive ? 'initialized' : 'failed',
     folderConfigured: !!process.env.GOOGLE_DRIVE_FOLDER_ID,
     firebaseAdmin: admin.apps.length > 0 ? 'initialized' : 'failed',
+    timestamp: new Date().toISOString(),
+    cors: 'enabled'
+  });
+});
+
+// Root endpoint for basic server check
+app.get('/', (req, res) => {
+  res.json({
+    message: 'GetMaterial Upload Server',
+    status: 'running',
     timestamp: new Date().toISOString()
   });
 });
