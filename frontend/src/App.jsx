@@ -42,6 +42,22 @@ function App() {
               <Route path='/userpage' element={<UserPage />} />
               <Route path='/donate' element={<Donate/>} />
             </Routes>
+            <div className="mt-10 mb-6">
+              <a
+                href="https://urise.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Live on URise Platform"
+              >
+                <img
+                  src="https://urise.dev/api/badge/preview"
+                  alt="URise Launch Badge"
+                  width="180"
+                  height="64"
+                  style={{ border: 'none' }}
+                />
+              </a>
+            </div>
           </div>
         </Router>
       </SavedNotesContextProvider>
