@@ -29,11 +29,12 @@ GetMaterial allows students to access notes shared by their seniors, fostering a
 
 
 Install Dependencies:
-
-cd frontend
-npm install
-cd ../server
-npm install
+   ```bash
+   cd frontend
+   npm install
+   cd ../server
+   npm install
+   ```
 
 
 
@@ -44,14 +45,18 @@ Update the .env files in both the frontend and server directories with your Fire
 Start the Application:
 
 # Frontend
-cd frontend
-npm start
+   ```bash
+   cd frontend
+   npm start
+   ```
 
 # Backend
-cd ../server
-npm start
-Access the App:
-Open http://localhost:3000 to view the app locally.
+   ```bash
+   cd ../server
+   npm start
+   Access the App:
+   Open http://localhost:3000 to view the app locally.
+   ```
 
 🤝 Contribution Guidelines
 Fork the repository and create a new branch for your feature.
